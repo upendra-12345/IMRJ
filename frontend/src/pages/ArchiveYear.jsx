@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 import {
   ArrowLeft,
@@ -11,8 +11,6 @@ import {
   Download,
   FileText,
 } from "lucide-react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 function ArchiveYear() {
   const { year } = useParams();
@@ -25,10 +23,9 @@ function ArchiveYear() {
     const fetchArchives = async () => {
       try {
         setLoading(true);
+        setError("");
 
-        const response = await axios.get(
-          `${API_URL}/api/submissions/archives`
-        );
+        const response = await API.get("/api/submissions/archives");
 
         const archives = response.data.archives || [];
 
@@ -39,7 +36,7 @@ function ArchiveYear() {
         setPapers(selectedYear?.papers || []);
 
       } catch (err) {
-        console.error(err);
+        console.error("Archive fetching error:", err);
         setError("Unable to load published papers.");
       } finally {
         setLoading(false);
@@ -49,18 +46,22 @@ function ArchiveYear() {
     fetchArchives();
   }, [year]);
 
+  // Download published research paper
   const downloadPaper = async (paper) => {
     try {
-      const response = await axios.get(
-        `${API_URL}/api/submissions/${paper._id}/download`,
-        { responseType: "blob" }
+      const response = await API.get(
+        `/api/submissions/${paper._id}/download`,
+        {
+          responseType: "blob",
+        }
       );
 
       const url = window.URL.createObjectURL(response.data);
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = paper.paperFile?.originalName || "research-paper.pdf";
+      link.download =
+        paper.paperFile?.originalName || "research-paper.pdf";
 
       document.body.appendChild(link);
       link.click();
@@ -69,7 +70,7 @@ function ArchiveYear() {
       window.URL.revokeObjectURL(url);
 
     } catch (err) {
-      console.error(err);
+      console.error("Paper download error:", err);
       alert("Unable to download paper.");
     }
   };
@@ -79,6 +80,7 @@ function ArchiveYear() {
 
       <div className="mx-auto max-w-7xl">
 
+        {/* Back Button */}
         <Link
           to="/archives"
           className="mb-10 inline-flex items-center gap-2 text-sm font-semibold text-[#173D35] hover:text-[#B89B64]"
@@ -87,6 +89,7 @@ function ArchiveYear() {
           Back to Archives
         </Link>
 
+        {/* Page Header */}
         <div className="mb-14 border-b border-[#E8E3D8] pb-10">
 
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#B89B64]">
@@ -103,18 +106,21 @@ function ArchiveYear() {
 
         </div>
 
+        {/* Loading */}
         {loading && (
           <p className="py-16 text-center text-[#173D35]">
             Loading published papers...
           </p>
         )}
 
+        {/* Error */}
         {!loading && error && (
           <p className="py-16 text-center text-red-600">
             {error}
           </p>
         )}
 
+        {/* No Papers */}
         {!loading && !error && papers.length === 0 && (
           <div className="py-20 text-center">
 
@@ -134,9 +140,10 @@ function ArchiveYear() {
           </div>
         )}
 
+        {/* Published Papers */}
         {!loading && !error && papers.length > 0 && (
-
           <>
+
             <div className="mb-10 flex items-center justify-between">
 
               <h2 className="font-serif text-3xl text-[#173D35]">
@@ -158,6 +165,7 @@ function ArchiveYear() {
                   className="border border-[#E8E3D8] bg-white p-8 transition-all hover:-translate-y-1 hover:border-[#B89B64] hover:shadow-xl"
                 >
 
+                  {/* Category and Status */}
                   <div className="flex items-center justify-between">
 
                     <span className="bg-[#173D35]/5 px-3 py-2 text-xs font-semibold text-[#173D35]">
@@ -170,10 +178,12 @@ function ArchiveYear() {
 
                   </div>
 
+                  {/* Paper Title */}
                   <h3 className="mt-7 font-serif text-2xl leading-snug text-[#173D35]">
                     {paper.title}
                   </h3>
 
+                  {/* Paper Information */}
                   <div className="mt-6 space-y-4 text-sm text-[#777D76]">
 
                     <p className="flex items-center gap-3">
@@ -200,12 +210,14 @@ function ArchiveYear() {
 
                   </div>
 
+                  {/* Abstract */}
                   {paper.abstract && (
                     <p className="mt-6 border-t border-[#E8E3D8] pt-5 text-sm leading-7 text-[#777D76]">
                       {paper.abstract}
                     </p>
                   )}
 
+                  {/* Download Button */}
                   <button
                     onClick={() => downloadPaper(paper)}
                     className="mt-7 inline-flex items-center gap-3 bg-[#173D35] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#24574A]"
@@ -219,6 +231,7 @@ function ArchiveYear() {
               ))}
 
             </div>
+
           </>
         )}
 

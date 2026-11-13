@@ -5,11 +5,11 @@ import {
   CheckCircle,
   ClipboardList,
   Upload,
-  ShieldCheck,
+  
   AlertCircle,
   ArrowRight,
   PenTool,
-  Quote,
+  
   Mail,
 } from "lucide-react";
 

@@ -3,7 +3,7 @@ import {
   Users,
   GraduationCap,
   ArrowRight,
-  ArrowUpRight,
+  
   BookOpen,
   Award,
   Globe,

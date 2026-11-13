@@ -1,9 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAdminAuth } from "../../context/AdminAuthContext";
-import { UserCircle, Save, Lock, Mail, User } from "lucide-react";
 
-const API_URL = "http://localhost:5001/api/auth";
+import {
+  UserCircle,
+  Save,
+  Lock,
+  Mail,
+  User,
+} from "lucide-react";
+
+// API Configuration
+const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, "");
+
+const API_URL = BASE_URL
+  ? `${BASE_URL}/api/auth`
+  : null;
 
 const AdminProfile = () => {
   const { admin, token, updateAdmin } = useAdminAuth();
@@ -19,13 +31,29 @@ const AdminProfile = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
+  // Keep form synchronized with admin context
+  useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      name: admin?.name || "",
+      email: admin?.email || "",
     }));
+  }, [admin]);
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setMessage("");
+    setError("");
   };
 
+  // Update administrator profile
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -34,31 +62,85 @@ const AdminProfile = () => {
     setError("");
 
     try {
+      if (!API_URL) {
+        throw new Error(
+          "Backend API URL is not configured. Check your frontend .env file."
+        );
+      }
+
+      if (!token) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
       const response = await axios.patch(
         `${API_URL}/profile`,
-        formData,
+        {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          currentPassword: formData.currentPassword,
+          ...(formData.newPassword.trim() && {
+            newPassword: formData.newPassword,
+          }),
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      updateAdmin(response.data.admin, response.data.token);
+      const updatedAdmin = response.data.admin;
+      const newToken = response.data.token;
 
+      if (!updatedAdmin) {
+        throw new Error(
+          "Invalid response received from the server."
+        );
+      }
+
+      // Update admin context
+      updateAdmin(
+        updatedAdmin,
+        newToken || token
+      );
+
+      // Reset password fields
       setFormData({
-        name: response.data.admin.name,
-        email: response.data.admin.email,
+        name: updatedAdmin.name || "",
+        email: updatedAdmin.email || "",
         currentPassword: "",
         newPassword: "",
       });
 
-      setMessage("Your profile has been updated successfully.");
+      setMessage(
+        response.data.message ||
+        "Your profile has been updated successfully."
+      );
 
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Unable to update profile."
+      console.error(
+        "Admin Profile Update Error:",
+        err
       );
+
+      if (err.response?.status === 401) {
+        setError(
+          "Your session has expired or your current password is incorrect. Please verify your details."
+        );
+      } else if (err.response?.status === 403) {
+        setError(
+          "You are not authorized to update this profile."
+        );
+      } else {
+        setError(
+          err.response?.data?.message ||
+          err.message ||
+          "Unable to update profile. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -67,15 +149,18 @@ const AdminProfile = () => {
   return (
     <div className="max-w-4xl">
 
+      {/* PAGE HEADER */}
       <div className="mb-8">
         <h2 className="text-3xl font-serif text-[#173D35]">
           My Profile
         </h2>
+
         <p className="text-gray-500 mt-2">
           Manage your administrator account and security settings.
         </p>
       </div>
 
+      {/* PROFILE CARD */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
 
         {/* PROFILE HEADER */}
@@ -87,8 +172,9 @@ const AdminProfile = () => {
 
           <div>
             <h3 className="text-xl font-semibold text-[#173D35]">
-              {admin?.name}
+              {admin?.name || "Administrator"}
             </h3>
+
             <p className="text-sm text-gray-500">
               Journal Administrator
             </p>
@@ -98,14 +184,20 @@ const AdminProfile = () => {
 
         {/* SUCCESS MESSAGE */}
         {message && (
-          <div className="mb-6 p-4 rounded-lg bg-green-50 text-green-700 text-sm">
+          <div
+            role="status"
+            className="mb-6 p-4 rounded-lg bg-green-50 border border-green-100 text-green-700 text-sm"
+          >
             {message}
           </div>
         )}
 
         {/* ERROR MESSAGE */}
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 text-red-600 text-sm">
+          <div
+            role="alert"
+            className="mb-6 p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm"
+          >
             {error}
           </div>
         )}
@@ -114,60 +206,79 @@ const AdminProfile = () => {
 
           {/* PERSONAL INFORMATION */}
           <div>
+
             <h3 className="text-lg font-semibold text-[#173D35] mb-5">
               Personal Information
             </h3>
 
             <div className="space-y-5">
 
+              {/* FULL NAME */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="admin-name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Full Name
                 </label>
 
                 <div className="relative">
+
                   <User
                     size={18}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                   />
 
                   <input
+                    id="admin-name"
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 outline-none focus:border-[#173D35]"
+                    minLength={2}
+                    maxLength={100}
+                    placeholder="Enter your full name"
+                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 outline-none focus:border-[#173D35] focus:ring-1 focus:ring-[#173D35] transition"
                   />
+
                 </div>
               </div>
 
+              {/* EMAIL */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="admin-email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Email Address
                 </label>
 
                 <div className="relative">
+
                   <Mail
                     size={18}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                   />
 
                   <input
+                    id="admin-email"
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 outline-none focus:border-[#173D35]"
+                    placeholder="Enter your email address"
+                    className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 outline-none focus:border-[#173D35] focus:ring-1 focus:ring-[#173D35] transition"
                   />
+
                 </div>
               </div>
 
             </div>
           </div>
 
-          {/* PASSWORD SECTION */}
+          {/* SECURITY SETTINGS */}
           <div className="border-t border-gray-100 pt-6">
 
             <h3 className="text-lg font-semibold text-[#173D35] mb-2 flex items-center gap-2">
@@ -176,18 +287,23 @@ const AdminProfile = () => {
             </h3>
 
             <p className="text-sm text-gray-500 mb-5">
-              Confirm your current password to save profile changes.
+              Enter your current password to save profile changes.
               Leave the new password blank if you don't want to change it.
             </p>
 
             <div className="space-y-5">
 
+              {/* CURRENT PASSWORD */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="current-password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Current Password
                 </label>
 
                 <input
+                  id="current-password"
                   type="password"
                   name="currentPassword"
                   value={formData.currentPassword}
@@ -195,16 +311,21 @@ const AdminProfile = () => {
                   required
                   autoComplete="current-password"
                   placeholder="Enter current password"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#173D35]"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#173D35] focus:ring-1 focus:ring-[#173D35] transition"
                 />
               </div>
 
+              {/* NEW PASSWORD */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="new-password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   New Password
                 </label>
 
                 <input
+                  id="new-password"
                   type="password"
                   name="newPassword"
                   value={formData.newPassword}
@@ -212,8 +333,12 @@ const AdminProfile = () => {
                   minLength={8}
                   autoComplete="new-password"
                   placeholder="Enter new password (optional)"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#173D35]"
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#173D35] focus:ring-1 focus:ring-[#173D35] transition"
                 />
+
+                <p className="text-xs text-gray-400 mt-2">
+                  Minimum 8 characters if changing your password.
+                </p>
               </div>
 
             </div>
@@ -225,10 +350,15 @@ const AdminProfile = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center gap-2 bg-[#173D35] text-white px-7 py-3 rounded-lg hover:bg-[#24574A] transition disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-[#173D35] text-white px-7 py-3 rounded-lg hover:bg-[#24574A] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
+
               <Save size={18} />
-              {loading ? "Saving Changes..." : "Save Changes"}
+
+              {loading
+                ? "Saving Changes..."
+                : "Save Changes"}
+
             </button>
 
           </div>

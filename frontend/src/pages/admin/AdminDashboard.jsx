@@ -19,17 +19,47 @@ import {
   Menu,
   X,
   UserCircle,
+  Mail,
+  MessageSquare,
+  Trash2,
 } from "lucide-react";
 
-const API_URL = "http://localhost:5001/api/submissions";
+const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, "");
+
+const SUBMISSION_API = `${BASE_URL}/api/submissions`;
+const CONTACT_API = `${BASE_URL}/api/contact`;
 
 const AdminDashboard = () => {
   const { admin, token, logout } = useAdminAuth();
   const navigate = useNavigate();
 
+  // SUBMISSIONS
   const [submissions, setSubmissions] = useState([]);
-  const [activeTab, setActiveTab] = useState("submissions");
 
+  // CONTACT MESSAGES
+  const [contacts, setContacts] = useState([]);
+
+  // NAVIGATION
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [mobileMenu, setMobileMenu] = useState(false);
+
+  // LOADING
+  const [loading, setLoading] = useState(true);
+  const [contactLoading, setContactLoading] = useState(false);
+
+  // SUBMISSION FILTERS
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  // CONTACT FILTERS
+  const [contactSearch, setContactSearch] = useState("");
+  const [contactStatusFilter, setContactStatusFilter] = useState("All");
+
+  // MODALS
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
+
+  // STATISTICS
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -38,21 +68,29 @@ const AdminDashboard = () => {
     rejected: 0,
   });
 
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  // AUTH HEADERS
+  const getAuthHeaders = () => ({
+    Authorization: `Bearer ${token}`,
+  });
+
+  // HANDLE AUTH ERRORS
+  const handleAuthError = (error) => {
+    if (error.response?.status === 401) {
+      logout();
+      navigate("/admin/login", { replace: true });
+      return true;
+    }
+
+    return false;
+  };
 
   // FETCH SUBMISSIONS
   const fetchSubmissions = async () => {
     try {
       setLoading(true);
 
-      const response = await axios.get(API_URL, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.get(SUBMISSION_API, {
+        headers: getAuthHeaders(),
         params: {
           limit: 100,
         },
@@ -63,29 +101,67 @@ const AdminDashboard = () => {
       setSubmissions(data);
 
       setStats({
-        total: response.data.total || 0,
-        pending: data.filter((item) => item.status === "Pending").length,
+        total: response.data.total || data.length,
+        pending: data.filter(
+          (item) => item.status === "Pending"
+        ).length,
         underReview: data.filter(
           (item) => item.status === "Under Review"
         ).length,
-        accepted: data.filter((item) => item.status === "Accepted").length,
-        rejected: data.filter((item) => item.status === "Rejected").length,
+        accepted: data.filter(
+          (item) => item.status === "Accepted"
+        ).length,
+        rejected: data.filter(
+          (item) => item.status === "Rejected"
+        ).length,
       });
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Submission fetch error:", error);
 
-      if (error.response?.status === 401) {
-        logout();
-        navigate("/admin/login", { replace: true });
+      if (!handleAuthError(error)) {
+        console.error(
+          error.response?.data?.message || "Unable to fetch submissions."
+        );
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // FETCH CONTACT MESSAGES
+  const fetchContacts = async () => {
+    try {
+      setContactLoading(true);
+
+      const response = await axios.get(
+        `${CONTACT_API}/admin`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      setContacts(response.data.contacts || []);
+    } catch (error) {
+      console.error("Contact fetch error:", error);
+
+      if (!handleAuthError(error)) {
+        alert(
+          error.response?.data?.message ||
+            "Unable to fetch contact messages."
+        );
+      }
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  // INITIAL DATA FETCH
   useEffect(() => {
-    fetchSubmissions();
-  }, []);
+    if (token) {
+      fetchSubmissions();
+      fetchContacts();
+    }
+  }, [token]);
 
   // LOGOUT
   const handleLogout = () => {
@@ -97,45 +173,47 @@ const AdminDashboard = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setMobileMenu(false);
+
+    if (tab === "submissions") {
+      fetchSubmissions();
+    }
+
+    if (tab === "contacts") {
+      fetchContacts();
+    }
   };
 
   // UPDATE SUBMISSION STATUS
-  const updateStatus = async (id, status) => {
+  const updateSubmissionStatus = async (id, status) => {
     try {
       await axios.patch(
-        `${API_URL}/${id}/status`,
+        `${SUBMISSION_API}/${id}/status`,
         { status },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: getAuthHeaders(),
         }
       );
 
       await fetchSubmissions();
 
-      if (selectedSubmission?._id === id) {
-        setSelectedSubmission((prev) => ({
-          ...prev,
-          status,
-        }));
-      }
+      setSelectedSubmission((prev) =>
+        prev?._id === id ? { ...prev, status } : prev
+      );
     } catch (error) {
       alert(
-        error.response?.data?.message || "Unable to update status."
+        error.response?.data?.message ||
+          "Unable to update submission status."
       );
     }
   };
 
-  // DOWNLOAD PAPER
+  // DOWNLOAD RESEARCH PAPER
   const downloadPaper = async (id, filename) => {
     try {
       const response = await axios.get(
-        `${API_URL}/${id}/download`,
+        `${SUBMISSION_API}/${id}/download`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: getAuthHeaders(),
           responseType: "blob",
         }
       );
@@ -146,17 +224,74 @@ const AdminDashboard = () => {
       const link = document.createElement("a");
       link.href = url;
       link.download = filename || "research-paper.pdf";
+
       document.body.appendChild(link);
       link.click();
       link.remove();
 
       window.URL.revokeObjectURL(url);
     } catch (error) {
+      console.error("Download error:", error);
       alert("Unable to download manuscript.");
     }
   };
 
-  // SEARCH AND FILTER
+  // UPDATE CONTACT STATUS
+  const updateContactStatus = async (id, status) => {
+    try {
+      await axios.patch(
+        `${CONTACT_API}/admin/${id}/status`,
+        { status },
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      await fetchContacts();
+
+      setSelectedContact((prev) =>
+        prev?._id === id ? { ...prev, status } : prev
+      );
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+          "Unable to update message status."
+      );
+    }
+  };
+
+  // DELETE CONTACT MESSAGE
+  const deleteContact = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this message?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(
+        `${CONTACT_API}/admin/${id}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+
+      setContacts((prev) =>
+        prev.filter((contact) => contact._id !== id)
+      );
+
+      setSelectedContact(null);
+
+      alert("Contact message deleted successfully.");
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+          "Unable to delete contact message."
+      );
+    }
+  };
+
+  // FILTER SUBMISSIONS
   const filteredSubmissions = submissions.filter((item) => {
     const searchText = search.toLowerCase();
 
@@ -171,7 +306,24 @@ const AdminDashboard = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // STATUS COLORS
+  // FILTER CONTACTS
+  const filteredContacts = contacts.filter((item) => {
+    const searchText = contactSearch.toLowerCase();
+
+    const matchesSearch =
+      item.name?.toLowerCase().includes(searchText) ||
+      item.email?.toLowerCase().includes(searchText) ||
+      item.subject?.toLowerCase().includes(searchText) ||
+      item.message?.toLowerCase().includes(searchText);
+
+    const matchesStatus =
+      contactStatusFilter === "All" ||
+      item.status === contactStatusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // SUBMISSION STATUS COLORS
   const statusStyle = (status) => {
     const styles = {
       Pending: "bg-amber-100 text-amber-700",
@@ -184,7 +336,18 @@ const AdminDashboard = () => {
     return styles[status] || "bg-gray-100 text-gray-600";
   };
 
-  // STATISTICS
+  // CONTACT STATUS COLORS
+  const contactStatusStyle = (status) => {
+    const styles = {
+      Unread: "bg-amber-100 text-amber-700",
+      Read: "bg-blue-100 text-blue-700",
+      Replied: "bg-green-100 text-green-700",
+    };
+
+    return styles[status] || "bg-gray-100 text-gray-600";
+  };
+
+  // DASHBOARD STATISTICS
   const statCards = [
     {
       title: "Total Submissions",
@@ -213,6 +376,10 @@ const AdminDashboard = () => {
     },
   ];
 
+  const unreadContacts = contacts.filter(
+    (item) => item.status === "Unread"
+  ).length;
+
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex">
 
@@ -238,7 +405,6 @@ const AdminDashboard = () => {
         {/* NAVIGATION */}
         <nav className="flex-1 p-5 space-y-2">
 
-          {/* DASHBOARD */}
           <button
             type="button"
             onClick={() => handleTabChange("dashboard")}
@@ -252,13 +418,9 @@ const AdminDashboard = () => {
             Dashboard
           </button>
 
-          {/* SUBMISSIONS */}
           <button
             type="button"
-            onClick={() => {
-              handleTabChange("submissions");
-              fetchSubmissions();
-            }}
+            onClick={() => handleTabChange("submissions")}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition ${
               activeTab === "submissions"
                 ? "bg-[#B89B64] text-[#173D35] font-semibold"
@@ -269,7 +431,28 @@ const AdminDashboard = () => {
             Submissions
           </button>
 
-          {/* MY PROFILE */}
+          {/* CONTACT MESSAGES */}
+          <button
+            type="button"
+            onClick={() => handleTabChange("contacts")}
+            className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-left transition ${
+              activeTab === "contacts"
+                ? "bg-[#B89B64] text-[#173D35] font-semibold"
+                : "text-white hover:bg-white/10"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <Mail size={20} />
+              Contact Messages
+            </span>
+
+            {unreadContacts > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                {unreadContacts}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() => handleTabChange("profile")}
@@ -319,13 +502,17 @@ const AdminDashboard = () => {
                   ? "My Profile"
                   : activeTab === "submissions"
                   ? "Research Submissions"
+                  : activeTab === "contacts"
+                  ? "Contact Messages"
                   : "Dashboard Overview"}
               </h2>
 
               <p className="text-sm text-gray-500">
                 {activeTab === "profile"
                   ? "Manage your administrator account"
-                  : "Manage your journal submissions"}
+                  : activeTab === "contacts"
+                  ? "Manage messages received from visitors"
+                  : "Manage your journal administration"}
               </p>
             </div>
 
@@ -354,173 +541,123 @@ const AdminDashboard = () => {
         {/* PAGE CONTENT */}
         <div className="p-5 md:p-8">
 
-          {/* PROFILE SECTION */}
-          {activeTab === "profile" && (
-            <AdminProfile />
-          )}
+          {/* PROFILE */}
+          {activeTab === "profile" && <AdminProfile />}
 
-          {/* DASHBOARD / SUBMISSIONS SECTION */}
-          {activeTab !== "profile" && (
+          {/* DASHBOARD */}
+          {activeTab === "dashboard" && (
             <>
+              <div className="mb-8">
+                <h2 className="text-2xl md:text-3xl font-serif text-[#173D35]">
+                  Welcome back, {admin?.name}
+                </h2>
 
-              {/* WELCOME */}
-              {activeTab === "dashboard" && (
-                <div className="mb-8">
-                  <h2 className="text-2xl md:text-3xl font-serif text-[#173D35]">
-                    Welcome back, {admin?.name}
-                  </h2>
-
-                  <p className="text-gray-500 mt-2">
-                    Here's what's happening with your journal today.
-                  </p>
-                </div>
-              )}
+                <p className="text-gray-500 mt-2">
+                  Here's what's happening with your journal today.
+                </p>
+              </div>
 
               {/* STATISTICS */}
-              {activeTab === "dashboard" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-9">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-9">
+                {statCards.map((card) => {
+                  const Icon = card.icon;
 
-                  {statCards.map((card) => {
-                    const Icon = card.icon;
-
-                    return (
-                      <div
-                        key={card.title}
-                        className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
-                      >
-                        <div className="w-11 h-11 rounded-lg bg-[#173D35]/10 text-[#173D35] flex items-center justify-center">
-                          <Icon size={22} />
-                        </div>
-
-                        <p className="text-sm text-gray-500 mt-5">
-                          {card.title}
-                        </p>
-
-                        <h3 className="text-3xl font-bold text-[#173D35] mt-1">
-                          {loading ? "..." : card.value}
-                        </h3>
+                  return (
+                    <div
+                      key={card.title}
+                      className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
+                    >
+                      <div className="w-11 h-11 rounded-lg bg-[#173D35]/10 text-[#173D35] flex items-center justify-center">
+                        <Icon size={22} />
                       </div>
-                    );
-                  })}
 
-                </div>
-              )}
+                      <p className="text-sm text-gray-500 mt-5">
+                        {card.title}
+                      </p>
 
-              {/* SUBMISSIONS TABLE */}
-              <section className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                      <h3 className="text-3xl font-bold text-[#173D35] mt-1">
+                        {loading ? "..." : card.value}
+                      </h3>
+                    </div>
+                  );
+                })}
+              </div>
 
-                <div className="p-5 md:p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between gap-4">
-
+              {/* CONTACT SUMMARY */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-[#173D35]">
-                      Research Submissions
+                    <h3 className="text-lg font-semibold text-[#173D35]">
+                      Contact Messages
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      Manage submitted research manuscripts.
+                      You have {contacts.length} total messages and{" "}
+                      {unreadContacts} unread messages.
                     </p>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3">
-
-                    {/* SEARCH */}
-                    <div className="relative">
-                      <Search
-                        size={18}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                      />
-
-                      <input
-                        type="text"
-                        placeholder="Search papers..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border border-gray-200 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:border-[#173D35] w-full sm:w-52"
-                      />
-                    </div>
-
-                    {/* STATUS FILTER */}
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#173D35]"
-                    >
-                      <option value="All">All Status</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Under Review">Under Review</option>
-                      <option value="Revision Required">Revision Required</option>
-                      <option value="Accepted">Accepted</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-
-                    {/* REFRESH */}
-                    <button
-                      onClick={fetchSubmissions}
-                      className="flex items-center justify-center gap-2 bg-[#173D35] text-white px-4 py-2.5 rounded-lg hover:bg-[#24574A]"
-                    >
-                      <RefreshCw size={16} />
-                      Refresh
-                    </button>
-
+                  <div className="w-12 h-12 rounded-xl bg-[#173D35]/10 text-[#173D35] flex items-center justify-center">
+                    <MessageSquare size={24} />
                   </div>
                 </div>
 
-                {/* TABLE */}
+                <button
+                  onClick={() => handleTabChange("contacts")}
+                  className="mt-5 text-sm font-semibold text-[#173D35] hover:text-[#B89B64]"
+                >
+                  View Contact Messages →
+                </button>
+              </div>
+
+              {/* RECENT SUBMISSIONS */}
+              <section className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-[#173D35]">
+                    Recent Submissions
+                  </h3>
+
+                  <button
+                    onClick={() => handleTabChange("submissions")}
+                    className="text-sm text-[#173D35] font-medium hover:text-[#B89B64]"
+                  >
+                    View All →
+                  </button>
+                </div>
+
                 <div className="overflow-x-auto">
-
-                  <table className="w-full text-left min-w-[850px]">
-
+                  <table className="w-full text-left min-w-[650px]">
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                       <tr>
-                        <th className="px-6 py-4">Submission ID</th>
                         <th className="px-6 py-4">Paper Title</th>
                         <th className="px-6 py-4">Author</th>
                         <th className="px-6 py-4">Date</th>
                         <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4">Actions</th>
                       </tr>
                     </thead>
 
                     <tbody className="divide-y divide-gray-100">
-
                       {loading ? (
                         <tr>
-                          <td colSpan="6" className="text-center py-12 text-gray-500">
+                          <td colSpan="4" className="text-center py-10 text-gray-500">
                             Loading submissions...
                           </td>
                         </tr>
-                      ) : filteredSubmissions.length === 0 ? (
+                      ) : submissions.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="text-center py-12 text-gray-500">
+                          <td colSpan="4" className="text-center py-10 text-gray-500">
                             No submissions found.
                           </td>
                         </tr>
                       ) : (
-                        filteredSubmissions.map((item) => (
+                        submissions.slice(0, 5).map((item) => (
                           <tr key={item._id} className="hover:bg-gray-50">
-
-                            <td className="px-6 py-4 text-xs font-medium text-[#173D35]">
-                              {item.submissionId}
+                            <td className="px-6 py-4 text-sm font-medium text-gray-800">
+                              {item.title}
                             </td>
 
-                            <td className="px-6 py-4">
-                              <p className="font-medium text-gray-800">
-                                {item.title}
-                              </p>
-
-                              <p className="text-xs text-gray-400 mt-1">
-                                {item.category}
-                              </p>
-                            </td>
-
-                            <td className="px-6 py-4">
-                              <p className="text-sm text-gray-800">
-                                {item.authorName}
-                              </p>
-
-                              <p className="text-xs text-gray-400">
-                                {item.email}
-                              </p>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {item.authorName}
                             </td>
 
                             <td className="px-6 py-4 text-sm text-gray-500">
@@ -532,51 +669,324 @@ const AdminDashboard = () => {
                                 {item.status}
                               </span>
                             </td>
-
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-
-                                <button
-                                  onClick={() => setSelectedSubmission(item)}
-                                  title="View Details"
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  <Eye size={18} />
-                                </button>
-
-                                <button
-                                  onClick={() =>
-                                    downloadPaper(
-                                      item._id,
-                                      item.paperFile?.originalName
-                                    )
-                                  }
-                                  title="Download Paper"
-                                  className="text-[#173D35] hover:text-[#B89B64]"
-                                >
-                                  <Download size={18} />
-                                </button>
-
-                              </div>
-                            </td>
-
                           </tr>
                         ))
                       )}
-
                     </tbody>
-
                   </table>
-
                 </div>
-
-                <div className="px-6 py-4 border-t border-gray-100 text-sm text-gray-500">
-                  Showing {filteredSubmissions.length} of {stats.total} submissions
-                </div>
-
               </section>
-
             </>
+          )}
+
+          {/* SUBMISSIONS SECTION */}
+          {activeTab === "submissions" && (
+            <section className="bg-white rounded-xl border border-gray-100 shadow-sm">
+
+              <div className="p-5 md:p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-[#173D35]">
+                    Research Submissions
+                  </h3>
+
+                  <p className="text-sm text-gray-500 mt-1">
+                    Manage submitted research manuscripts.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+
+                  <div className="relative">
+                    <Search
+                      size={18}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Search papers..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="border border-gray-200 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:border-[#173D35] w-full sm:w-52"
+                    />
+                  </div>
+
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#173D35]"
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Revision Required">Revision Required</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+
+                  <button
+                    onClick={fetchSubmissions}
+                    className="flex items-center justify-center gap-2 bg-[#173D35] text-white px-4 py-2.5 rounded-lg hover:bg-[#24574A]"
+                  >
+                    <RefreshCw size={16} />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* SUBMISSIONS TABLE */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[850px]">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                    <tr>
+                      <th className="px-6 py-4">Submission ID</th>
+                      <th className="px-6 py-4">Paper Title</th>
+                      <th className="px-6 py-4">Author</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-100">
+                    {loading ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-12 text-gray-500">
+                          Loading submissions...
+                        </td>
+                      </tr>
+                    ) : filteredSubmissions.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-12 text-gray-500">
+                          No submissions found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredSubmissions.map((item) => (
+                        <tr key={item._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 text-xs font-medium text-[#173D35]">
+                            {item.submissionId}
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <p className="font-medium text-gray-800">
+                              {item.title}
+                            </p>
+
+                            <p className="text-xs text-gray-400 mt-1">
+                              {item.category}
+                            </p>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-800">
+                              {item.authorName}
+                            </p>
+
+                            <p className="text-xs text-gray-400">
+                              {item.email}
+                            </p>
+                          </td>
+
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle(item.status)}`}>
+                              {item.status}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => setSelectedSubmission(item)}
+                                title="View Details"
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <Eye size={18} />
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  downloadPaper(
+                                    item._id,
+                                    item.paperFile?.originalName
+                                  )
+                                }
+                                title="Download Paper"
+                                className="text-[#173D35] hover:text-[#B89B64]"
+                              >
+                                <Download size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-100 text-sm text-gray-500">
+                Showing {filteredSubmissions.length} of {stats.total} submissions
+              </div>
+            </section>
+          )}
+
+          {/* CONTACT MESSAGES SECTION */}
+          {activeTab === "contacts" && (
+            <section className="bg-white rounded-xl border border-gray-100 shadow-sm">
+
+              <div className="p-5 md:p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-[#173D35]">
+                    Contact Messages
+                  </h3>
+
+                  <p className="text-sm text-gray-500 mt-1">
+                    View and manage messages submitted through your contact page.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+
+                  {/* SEARCH */}
+                  <div className="relative">
+                    <Search
+                      size={18}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Search messages..."
+                      value={contactSearch}
+                      onChange={(e) => setContactSearch(e.target.value)}
+                      className="border border-gray-200 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:border-[#173D35] w-full sm:w-52"
+                    />
+                  </div>
+
+                  {/* STATUS FILTER */}
+                  <select
+                    value={contactStatusFilter}
+                    onChange={(e) =>
+                      setContactStatusFilter(e.target.value)
+                    }
+                    className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#173D35]"
+                  >
+                    <option value="All">All Messages</option>
+                    <option value="Unread">Unread</option>
+                    <option value="Read">Read</option>
+                    <option value="Replied">Replied</option>
+                  </select>
+
+                  {/* REFRESH */}
+                  <button
+                    onClick={fetchContacts}
+                    className="flex items-center justify-center gap-2 bg-[#173D35] text-white px-4 py-2.5 rounded-lg hover:bg-[#24574A]"
+                  >
+                    <RefreshCw size={16} />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* CONTACT TABLE */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[800px]">
+
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                    <tr>
+                      <th className="px-6 py-4">Name</th>
+                      <th className="px-6 py-4">Email</th>
+                      <th className="px-6 py-4">Subject</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-100">
+                    {contactLoading ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-12 text-gray-500">
+                          Loading contact messages...
+                        </td>
+                      </tr>
+                    ) : filteredContacts.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="text-center py-12 text-gray-500">
+                          No contact messages found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredContacts.map((item) => (
+                        <tr key={item._id} className="hover:bg-gray-50">
+
+                          <td className="px-6 py-4">
+                            <p className="font-medium text-gray-800">
+                              {item.name}
+                            </p>
+
+                            <p className="text-xs text-gray-400 mt-1">
+                              {item.phone || "No phone number"}
+                            </p>
+                          </td>
+
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {item.email}
+                          </td>
+
+                          <td className="px-6 py-4 text-sm text-gray-800">
+                            {item.subject}
+                          </td>
+
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${contactStatusStyle(item.status)}`}>
+                              {item.status}
+                            </span>
+                          </td>
+
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+
+                              <button
+                                onClick={() => setSelectedContact(item)}
+                                title="View Message"
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <Eye size={18} />
+                              </button>
+
+                              <button
+                                onClick={() => deleteContact(item._id)}
+                                title="Delete Message"
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+
+                </table>
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-100 text-sm text-gray-500">
+                Showing {filteredContacts.length} of {contacts.length} messages
+              </div>
+
+            </section>
           )}
 
         </div>
@@ -585,11 +995,9 @@ const AdminDashboard = () => {
       {/* SUBMISSION DETAILS MODAL */}
       {selectedSubmission && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
 
             <div className="flex justify-between items-center mb-6">
-
               <h2 className="text-xl font-semibold text-[#173D35]">
                 Submission Details
               </h2>
@@ -601,11 +1009,9 @@ const AdminDashboard = () => {
               >
                 <X size={22} />
               </button>
-
             </div>
 
             <div className="space-y-4">
-
               {[
                 ["Submission ID", selectedSubmission.submissionId],
                 ["Paper Title", selectedSubmission.title],
@@ -634,7 +1040,7 @@ const AdminDashboard = () => {
                 </p>
 
                 <p className="text-gray-700 mt-1 leading-relaxed">
-                  {selectedSubmission.abstract}
+                  {selectedSubmission.abstract || "Not provided"}
                 </p>
               </div>
 
@@ -646,7 +1052,10 @@ const AdminDashboard = () => {
                 <select
                   value={selectedSubmission.status}
                   onChange={(e) =>
-                    updateStatus(selectedSubmission._id, e.target.value)
+                    updateSubmissionStatus(
+                      selectedSubmission._id,
+                      e.target.value
+                    )
                   }
                   className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-[#173D35]"
                 >
@@ -669,6 +1078,143 @@ const AdminDashboard = () => {
               >
                 <Download size={18} />
                 Download Research Paper
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONTACT MESSAGE DETAILS MODAL */}
+      {selectedContact && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+
+          <div className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6">
+
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-[#173D35]">
+                  Contact Message
+                </h2>
+
+                <p className="text-sm text-gray-500 mt-1">
+                  Message details from your website visitor
+                </p>
+              </div>
+
+              <button
+                onClick={() => setSelectedContact(null)}
+                className="text-gray-500 hover:text-red-500"
+                aria-label="Close message"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+
+              <div>
+                <p className="text-xs uppercase text-gray-400">
+                  Name
+                </p>
+
+                <p className="text-gray-800 font-medium mt-1">
+                  {selectedContact.name}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase text-gray-400">
+                  Email
+                </p>
+
+                <a
+                  href={`mailto:${selectedContact.email}`}
+                  className="text-[#173D35] font-medium mt-1 inline-block hover:underline"
+                >
+                  {selectedContact.email}
+                </a>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase text-gray-400">
+                  Phone
+                </p>
+
+                <p className="text-gray-800 font-medium mt-1">
+                  {selectedContact.phone || "Not provided"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase text-gray-400">
+                  Subject
+                </p>
+
+                <p className="text-gray-800 font-medium mt-1">
+                  {selectedContact.subject}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase text-gray-400">
+                  Message
+                </p>
+
+                <p className="text-gray-700 mt-2 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
+                  {selectedContact.message}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs uppercase text-gray-400">
+                  Received On
+                </p>
+
+                <p className="text-gray-800 mt-1">
+                  {new Date(selectedContact.createdAt).toLocaleString("en-IN")}
+                </p>
+              </div>
+
+              {/* UPDATE MESSAGE STATUS */}
+              <div>
+                <p className="text-xs uppercase text-gray-400 mb-2">
+                  Update Message Status
+                </p>
+
+                <select
+                  value={selectedContact.status}
+                  onChange={(e) =>
+                    updateContactStatus(
+                      selectedContact._id,
+                      e.target.value
+                    )
+                  }
+                  className="w-full border border-gray-200 rounded-lg p-3 outline-none focus:border-[#173D35]"
+                >
+                  <option value="Unread">Unread</option>
+                  <option value="Read">Read</option>
+                  <option value="Replied">Replied</option>
+                </select>
+              </div>
+
+              {/* REPLY THROUGH EMAIL */}
+              <a
+                href={`mailto:${selectedContact.email}?subject=${encodeURIComponent(
+                  `Re: ${selectedContact.subject}`
+                )}`}
+                className="w-full bg-[#173D35] text-white py-3 rounded-lg flex justify-center items-center gap-2 hover:bg-[#24574A]"
+              >
+                <Mail size={18} />
+                Reply Through Email
+              </a>
+
+              {/* DELETE */}
+              <button
+                onClick={() => deleteContact(selectedContact._id)}
+                className="w-full border border-red-200 text-red-600 py-3 rounded-lg flex justify-center items-center gap-2 hover:bg-red-50"
+              >
+                <Trash2 size={18} />
+                Delete Message
               </button>
 
             </div>

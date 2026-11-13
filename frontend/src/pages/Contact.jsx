@@ -1,4 +1,7 @@
 import { useState } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
+
 import {
   Mail,
   Phone,
@@ -10,12 +13,14 @@ import {
   ArrowUpRight,
   MessageCircle,
   BookOpen,
-  Globe,
   CheckCircle2,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 
-function Contact() {
+const API_URL = import.meta.env.VITE_API_URL;
+
+const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -24,539 +29,558 @@ function Contact() {
     message: "",
   });
 
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const contactDetails = [
+    {
+      icon: Mail,
+      title: "Email Us",
+      value: "dasglobal08@gmail.com",
+      link: "mailto:dasglobal08@gmail.com",
+      description: "Send us your questions anytime.",
+    },
+    {
+      icon: Phone,
+      title: "Call Us",
+      value: "+91 8109115483",
+      link: "tel:+918109115483",
+      description: "Connect with our support team.",
+    },
+    {
+      icon: MapPin,
+      title: "Our Location",
+      value: "Mumbai, Maharashtra",
+      link: "https://maps.google.com/?q=Mumbai+Maharashtra",
+      description: "India",
+    },
+    {
+      icon: Clock,
+      title: "Response Time",
+      value: "24–48 Hours",
+      link: null,
+      description: "We usually respond within two working days.",
+    },
+  ];
+
+  const commonInquiries = [
+    "Manuscript Submission",
+    "Publication Process",
+    "Editorial & Review",
+    "Research Collaboration",
+  ];
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setError("");
+    setSubmitted(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Frontend demonstration only.
-    // Connect an API/backend to actually store or send messages.
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    setSubmitted(false);
 
-    setFormData({
-      name: "",
-      phone: "",
-      email: "",
-      subject: "",
-      message: "",
-    });
+    try {
+      if (!API_URL) {
+        throw new Error(
+          "Backend API URL is not configured. Please check your frontend .env file."
+        );
+      }
+
+      const response = await axios.post(
+        `${API_URL.replace(/\/+$/, "")}/api/contact`,
+        formData
+      );
+
+      if (response.data.success) {
+        setSubmitted(true);
+
+        setFormData({
+          name: "",
+          phone: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+      } else {
+        setError(
+          response.data.message || "Unable to submit your message."
+        );
+      }
+    } catch (err) {
+      console.error("Contact form error:", err);
+
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Something went wrong. Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const contactCards = [
-    {
-      icon: <Mail size={22} />,
-      title: "Email Address",
-      content: "dasglobal08@gmail.com",
-      detail: "Send us your questions anytime.",
-      link: "mailto:drssasho@gmail.com",
-    },
-    {
-      icon: <Phone size={22} />,
-      title: "Phone Number",
-      content: "+91 8109115483",
-      detail: "Connect with our support team.",
-      link: "tel:+918109115483",
-    },
-    {
-      icon: <MapPin size={22} />,
-      title: "Our Location",
-      content: "Mumbai, Maharashtra",
-      detail: "India",
-      link: null,
-    },
-    {
-      icon: <Clock size={22} />,
-      title: "Response Time",
-      content: "24–48 Hours",
-      detail: "During regular business days.",
-      link: null,
-    },
-  ];
-
-  const inquiries = [
-    "Manuscript submission guidelines",
-    "Peer review process",
-    "Publication fees and charges",
-    "Copyright and licensing",
-    "Article processing status",
-  ];
-
-  const inputStyle =
-    "w-full rounded-lg border border-[#E8E3D8] bg-[#FAF9F6] px-4 py-3.5 text-sm text-[#252B29] placeholder:text-[#A0A39D] outline-none transition duration-300 focus:border-[#B89B64] focus:ring-2 focus:ring-[#B89B64]/20";
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
 
       {/* ================= HERO SECTION ================= */}
-      <section className="relative min-h-[380px] flex items-center overflow-hidden">
 
+      <section className="relative flex min-h-[350px] items-center overflow-hidden bg-[#173D35]">
         <div
-          className="absolute inset-0 bg-cover bg-center animate-hero-zoom"
+          className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=2000&q=85')",
+              "url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1800&q=80')",
           }}
         />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#102F29]/95 via-[#173D35]/85 to-[#173D35]/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#102F29] via-[#173D35]/95 to-[#173D35]/80" />
 
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px)",
-            backgroundSize: "45px 45px",
-          }}
-        />
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)",
+              backgroundSize: "45px 45px",
+            }}
+          />
+        </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 md:px-10 py-20">
+        <div className="relative mx-auto w-full max-w-7xl px-6 py-20 md:px-10">
+          <div className="max-w-3xl">
 
-          <div className="max-w-3xl animate-fade-up">
+            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#B89B64]/50 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#D8C49A]">
+              <MessageCircle size={15} />
+              Get In Touch
+            </span>
 
-            <div className="flex items-center gap-3 mb-6">
-              <span className="h-[1px] w-12 bg-[#B89B64]" />
-              <span className="text-[#D1BC91] uppercase tracking-[4px] text-xs font-semibold">
-                We'd Love to Hear From You
-              </span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl text-white leading-tight mb-6">
-              Get in <span className="text-[#D1BC91] italic">Touch</span>
+            <h1 className="font-serif text-4xl font-bold leading-tight text-white md:text-6xl">
+              Contact <span className="text-[#C7A96B]">Us</span>
             </h1>
 
-            <p className="text-gray-200 text-base md:text-lg leading-8 max-w-2xl">
-              Have a question about research, manuscript submissions, or
-              publication? Our team is here to assist you. Connect with
-              IMRJ and let's move research forward together.
+            <p className="mt-5 max-w-2xl text-base leading-8 text-white/75 md:text-lg">
+              Have questions about manuscript submission, publication, or
+              research collaboration? We are here to help you.
             </p>
 
-            <div className="flex items-center gap-3 mt-8 text-sm text-gray-300">
-              <Link to="/" className="hover:text-[#D1BC91] transition">
+            <div className="mt-8 flex items-center gap-3 text-sm text-white/70">
+              <Link to="/" className="transition hover:text-[#D8C49A]">
                 Home
               </Link>
 
-              <span className="text-[#B89B64]">/</span>
+              <ArrowRight size={14} />
 
-              <span className="text-[#D1BC91]">Contact</span>
+              <span className="text-[#D8C49A]">Contact Us</span>
             </div>
 
           </div>
         </div>
-
-        <div className="absolute bottom-0 right-0 w-64 h-64 border border-white/10 rounded-full translate-x-1/3 translate-y-1/2" />
-        <div className="absolute bottom-0 right-20 w-40 h-40 border border-[#B89B64]/20 rounded-full translate-y-1/2" />
-
       </section>
-
 
       {/* ================= INTRODUCTION ================= */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 pt-20 pb-12">
 
-        <div className="max-w-3xl mx-auto text-center animate-fade-up">
+      <section className="px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-4xl text-center">
 
-          <span className="text-[#A58A56] uppercase tracking-[3px] text-xs font-bold">
-            Contact Our Team
+          <span className="text-xs font-bold uppercase tracking-[0.25em] text-[#B89B64]">
+            We Would Love To Hear From You
           </span>
 
-          <h2 className="text-3xl md:text-4xl text-[#173D35] mt-4 mb-5">
-            Let's Start a <span className="italic">Conversation</span>
+          <h2 className="mt-4 font-serif text-3xl font-bold text-[#173D35] md:text-4xl">
+            Let's Start a Conversation
           </h2>
 
-          <p className="text-[#777D76] leading-8 text-sm md:text-base">
-            Whether you are a researcher, author, academician, or reader,
-            we welcome your questions and suggestions. Reach out to us
-            using the details below or send us a message through the form.
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#626B65]">
+            At the International Multidisciplinary Research Journal, we value
+            communication with researchers, authors, reviewers, and academic
+            institutions. Reach out to us for any assistance related to
+            research publication or journal activities.
           </p>
 
-          <div className="w-16 h-[2px] bg-[#B89B64] mx-auto mt-7" />
+          <div className="mx-auto mt-8 h-1 w-20 rounded-full bg-[#B89B64]" />
 
         </div>
-
       </section>
 
+      {/* ================= CONTACT SECTION ================= */}
 
-      {/* ================= MAIN CONTACT SECTION ================= */}
-      <section className="max-w-7xl mx-auto px-6 md:px-10 pb-20">
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+      <section className="px-6 pb-20 md:px-10">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 lg:grid-cols-5">
 
           {/* LEFT SIDE */}
-          <div className="lg:col-span-2 space-y-7">
+
+          <div className="space-y-8 lg:col-span-2">
 
             <div>
-              <span className="text-[#A58A56] uppercase tracking-[3px] text-xs font-bold">
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#B89B64]">
                 Contact Information
               </span>
 
-              <h3 className="text-2xl md:text-3xl text-[#173D35] mt-3">
-                We're Here to Help
-              </h3>
+              <h2 className="mt-3 font-serif text-3xl font-bold text-[#173D35]">
+                Get in Touch
+              </h2>
 
-              <p className="text-sm text-[#777D76] leading-7 mt-3">
-                Get in touch with our editorial and support team for
-                assistance with your research and publication queries.
+              <p className="mt-4 leading-7 text-[#626B65]">
+                Choose your preferred way to contact us. Our team will be
+                happy to assist you with your queries.
               </p>
             </div>
 
-
             {/* CONTACT CARDS */}
+
             <div className="space-y-4">
-
-              {contactCards.map((card, index) => {
-                const CardContent = (
-                  <div className="flex items-start gap-4">
-
-                    <div className="w-12 h-12 shrink-0 rounded-lg bg-[#173D35] text-[#D1BC91] flex items-center justify-center group-hover:bg-[#B89B64] group-hover:text-white transition duration-300">
-                      {card.icon}
-                    </div>
-
-                    <div>
-                      <h4 className="text-[#173D35] font-semibold text-base mb-1">
-                        {card.title}
-                      </h4>
-
-                      <p className="text-[#252B29] text-sm font-medium break-words">
-                        {card.content}
-                      </p>
-
-                      <p className="text-xs text-[#898D86] mt-1">
-                        {card.detail}
-                      </p>
-                    </div>
-
-                    {card.link && (
-                      <ArrowUpRight
-                        size={17}
-                        className="ml-auto shrink-0 text-[#B89B64] opacity-0 group-hover:opacity-100 transition"
-                      />
-                    )}
-
-                  </div>
-                );
+              {contactDetails.map((item, index) => {
+                const Icon = item.icon;
 
                 return (
                   <div
                     key={index}
-                    className="bg-white border border-[#E8E3D8] rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-[#B89B64]/50 transition duration-300 group animate-fade-up"
-                    style={{ animationDelay: `${index * 120}ms` }}
+                    className="group flex items-start gap-4 rounded-2xl border border-[#E8E5DC] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#B89B64]/60 hover:shadow-lg"
                   >
-                    {card.link ? (
-                      <a href={card.link} className="block">
-                        {CardContent}
-                      </a>
-                    ) : (
-                      CardContent
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#173D35] text-[#D8C49A] transition group-hover:bg-[#B89B64] group-hover:text-white">
+                      <Icon size={21} />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-[#173D35]">
+                        {item.title}
+                      </h3>
+
+                      {item.link ? (
+                        <a
+                          href={item.link}
+                          target={
+                            item.link.startsWith("http") ? "_blank" : undefined
+                          }
+                          rel={
+                            item.link.startsWith("http")
+                              ? "noopener noreferrer"
+                              : undefined
+                          }
+                          className="mt-1 inline-block break-words text-sm font-medium text-[#A5864D] transition hover:text-[#173D35]"
+                        >
+                          {item.value}
+                        </a>
+                      ) : (
+                        <p className="mt-1 text-sm font-medium text-[#A5864D]">
+                          {item.value}
+                        </p>
+                      )}
+
+                      <p className="mt-1 text-xs leading-5 text-[#7A817C]">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    {item.link && (
+                      <ArrowUpRight
+                        size={17}
+                        className="shrink-0 text-[#B89B64] opacity-0 transition group-hover:opacity-100"
+                      />
                     )}
                   </div>
                 );
               })}
-
             </div>
 
-
             {/* COMMON INQUIRIES */}
-            <div className="bg-[#173D35] rounded-xl p-6 md:p-7 relative overflow-hidden">
 
-              <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full border border-white/10" />
-              <div className="absolute -right-5 -top-5 w-24 h-24 rounded-full border border-[#B89B64]/20" />
-
-              <div className="relative z-10">
-
-                <div className="flex items-center gap-3 mb-5">
-
-                  <div className="w-10 h-10 bg-[#B89B64]/20 text-[#D1BC91] rounded-lg flex items-center justify-center">
-                    <CircleHelp size={21} />
-                  </div>
-
-                  <h3 className="text-white font-semibold text-lg">
-                    Common Inquiries
-                  </h3>
-
+            <div className="rounded-2xl bg-[#173D35] p-7 text-white">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-[#D8C49A]">
+                  <CircleHelp size={21} />
                 </div>
 
-                <p className="text-gray-300 text-sm leading-6 mb-5">
-                  You can contact us regarding the following topics:
-                </p>
+                <h3 className="font-serif text-xl font-semibold">
+                  Common Inquiries
+                </h3>
+              </div>
 
-                <ul className="space-y-4">
+              <p className="mt-3 text-sm leading-6 text-white/65">
+                You can contact us regarding the following topics:
+              </p>
 
-                  {inquiries.map((item, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start gap-3 text-sm text-gray-200"
-                    >
-                      <CheckCircle2
-                        size={17}
-                        className="text-[#D1BC91] shrink-0 mt-0.5"
-                      />
-
-                      {item}
-                    </li>
-                  ))}
-
-                </ul>
-
+              <div className="mt-5 space-y-3">
+                {commonInquiries.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 text-sm text-white/85"
+                  >
+                    <CheckCircle2
+                      size={16}
+                      className="shrink-0 text-[#C7A96B]"
+                    />
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
 
           </div>
 
-
           {/* RIGHT SIDE - CONTACT FORM */}
+
           <div className="lg:col-span-3">
+            <div className="rounded-3xl border border-[#E8E5DC] bg-white p-6 shadow-lg md:p-10">
 
-            <div className="bg-white border border-[#E8E3D8] rounded-2xl shadow-sm overflow-hidden">
+              <div className="mb-8">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#B89B64]">
+                  Send Us a Message
+                </span>
 
-              {/* FORM HEADER */}
-              <div className="bg-[#173D35] px-6 md:px-9 py-8 relative overflow-hidden">
+                <h2 className="mt-3 font-serif text-3xl font-bold text-[#173D35]">
+                  We'd Love to Hear From You
+                </h2>
 
-                <div className="absolute -right-10 -top-20 w-60 h-60 rounded-full border border-white/10" />
-
-                <div className="relative z-10">
-
-                  <div className="flex items-center gap-3 mb-4">
-
-                    <div className="w-11 h-11 rounded-lg bg-[#B89B64]/20 text-[#D1BC91] flex items-center justify-center">
-                      <MessageCircle size={22} />
-                    </div>
-
-                    <span className="text-[#D1BC91] uppercase tracking-[3px] text-xs font-semibold">
-                      Contact Form
-                    </span>
-
-                  </div>
-
-                  <h2 className="text-3xl md:text-4xl text-white mb-3">
-                    Send Us a Message
-                  </h2>
-
-                  <p className="text-gray-300 text-sm leading-6 max-w-lg">
-                    Fill out the form below and share your query with us.
-                    We'll get back to you as soon as possible.
-                  </p>
-
-                </div>
-
+                <p className="mt-3 text-sm leading-7 text-[#737B75]">
+                  Fill out the form below and our team will get back to you
+                  as soon as possible.
+                </p>
               </div>
 
+              {/* SUCCESS MESSAGE */}
 
-              {/* FORM BODY */}
-              <div className="p-6 md:p-9">
+              {submitted && (
+                <div className="mb-6 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">
+                  <CheckCircle2 size={21} className="mt-0.5 shrink-0" />
 
-                {submitted && (
-                  <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-start gap-3">
-
-                    <CheckCircle2
-                      size={20}
-                      className="text-green-700 shrink-0"
-                    />
-
-                    <div>
-                      <p className="text-green-800 font-semibold text-sm">
-                        Thank you for contacting us!
-                      </p>
-
-                      <p className="text-green-700 text-xs mt-1">
-                        Your form was submitted in this demo. Connect a
-                        backend to deliver and store actual messages.
-                      </p>
-                    </div>
-
-                  </div>
-                )}
-
-                <form
-                  onSubmit={handleSubmit}
-                  onChange={() => setSubmitted(false)}
-                  className="space-y-6"
-                >
-
-                  {/* NAME AND PHONE */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                    <div>
-                      <label className="block text-sm font-semibold text-[#252B29] mb-2">
-                        Full Name <span className="text-[#B89B64]">*</span>
-                      </label>
-
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter your full name"
-                        required
-                        autoComplete="name"
-                        className={inputStyle}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-[#252B29] mb-2">
-                        Phone Number
-                      </label>
-
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="Enter your phone number"
-                        autoComplete="tel"
-                        className={inputStyle}
-                      />
-                    </div>
-
-                  </div>
-
-
-                  {/* EMAIL */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#252B29] mb-2">
-                      Email Address <span className="text-[#B89B64]">*</span>
-                    </label>
+                    <p className="font-semibold">
+                      Message Submitted Successfully!
+                    </p>
 
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter your email address"
-                      required
-                      autoComplete="email"
-                      className={inputStyle}
-                    />
+                    <p className="mt-1 text-sm">
+                      Thank you for contacting us. Your message has been
+                      received, and our team will get back to you soon.
+                    </p>
                   </div>
+                </div>
+              )}
 
+              {/* ERROR MESSAGE */}
 
-                  {/* SUBJECT */}
+              {error && (
+                <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+                  <AlertCircle size={21} className="mt-0.5 shrink-0" />
+
+                  <p className="text-sm">{error}</p>
+                </div>
+              )}
+
+              {/* FORM */}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+
+                {/* NAME AND PHONE */}
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+
                   <div>
-                    <label className="block text-sm font-semibold text-[#252B29] mb-2">
-                      Subject <span className="text-[#B89B64]">*</span>
+                    <label
+                      htmlFor="name"
+                      className="mb-2 block text-sm font-semibold text-[#303B35]"
+                    >
+                      Full Name <span className="text-red-500">*</span>
                     </label>
 
                     <input
                       type="text"
-                      name="subject"
-                      value={formData.subject}
+                      id="name"
+                      name="name"
+                      value={formData.name}
                       onChange={handleChange}
-                      placeholder="What is your inquiry about?"
+                      placeholder="Enter your full name"
                       required
-                      className={inputStyle}
+                      className="w-full rounded-xl border border-[#E5E3DB] bg-[#FAF9F6] px-4 py-3 text-sm text-[#303B35] outline-none transition placeholder:text-[#A5AAA5] focus:border-[#B89B64] focus:ring-2 focus:ring-[#B89B64]/20"
                     />
                   </div>
 
-
-                  {/* MESSAGE */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#252B29] mb-2">
-                      Your Message <span className="text-[#B89B64]">*</span>
+                    <label
+                      htmlFor="phone"
+                      className="mb-2 block text-sm font-semibold text-[#303B35]"
+                    >
+                      Phone Number
                     </label>
 
-                    <textarea
-                      name="message"
-                      value={formData.message}
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
                       onChange={handleChange}
-                      placeholder="Write your message here..."
-                      rows={6}
-                      required
-                      className={`${inputStyle} resize-none`}
+                      placeholder="Enter your phone number"
+                      className="w-full rounded-xl border border-[#E5E3DB] bg-[#FAF9F6] px-4 py-3 text-sm text-[#303B35] outline-none transition placeholder:text-[#A5AAA5] focus:border-[#B89B64] focus:ring-2 focus:ring-[#B89B64]/20"
                     />
                   </div>
 
+                </div>
 
-                  {/* SUBMIT BUTTON */}
-                  <button
-                    type="submit"
-                    className="w-full bg-[#173D35] hover:bg-[#245448] text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-3 transition duration-300 shadow-md hover:shadow-lg group"
+                {/* EMAIL */}
+
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-2 block text-sm font-semibold text-[#303B35]"
                   >
-                    Send Message
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
 
-                    <Send
-                      size={17}
-                      className="group-hover:translate-x-1 group-hover:-translate-y-1 transition"
-                    />
-                  </button>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email address"
+                    required
+                    className="w-full rounded-xl border border-[#E5E3DB] bg-[#FAF9F6] px-4 py-3 text-sm text-[#303B35] outline-none transition placeholder:text-[#A5AAA5] focus:border-[#B89B64] focus:ring-2 focus:ring-[#B89B64]/20"
+                  />
+                </div>
 
-                  <p className="text-xs text-center text-[#92958E]">
-                    Your information should only be used to respond to your inquiry.
-                  </p>
+                {/* SUBJECT */}
 
-                </form>
+                <div>
+                  <label
+                    htmlFor="subject"
+                    className="mb-2 block text-sm font-semibold text-[#303B35]"
+                  >
+                    Subject <span className="text-red-500">*</span>
+                  </label>
 
-              </div>
+                  <select
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-xl border border-[#E5E3DB] bg-[#FAF9F6] px-4 py-3 text-sm text-[#303B35] outline-none transition focus:border-[#B89B64] focus:ring-2 focus:ring-[#B89B64]/20"
+                  >
+                    <option value="">Select an inquiry type</option>
+                    <option value="Manuscript Submission">
+                      Manuscript Submission
+                    </option>
+                    <option value="Publication Process">
+                      Publication Process
+                    </option>
+                    <option value="Editorial Inquiry">
+                      Editorial Inquiry
+                    </option>
+                    <option value="Review Process">
+                      Review Process
+                    </option>
+                    <option value="Research Collaboration">
+                      Research Collaboration
+                    </option>
+                    <option value="General Inquiry">
+                      General Inquiry
+                    </option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
 
+                {/* MESSAGE */}
+
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="mb-2 block text-sm font-semibold text-[#303B35]"
+                  >
+                    Your Message <span className="text-red-500">*</span>
+                  </label>
+
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Write your message here..."
+                    rows="6"
+                    required
+                    className="w-full resize-none rounded-xl border border-[#E5E3DB] bg-[#FAF9F6] px-4 py-3 text-sm text-[#303B35] outline-none transition placeholder:text-[#A5AAA5] focus:border-[#B89B64] focus:ring-2 focus:ring-[#B89B64]/20"
+                  />
+                </div>
+
+                {/* SUBMIT BUTTON */}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#173D35] px-6 py-4 text-sm font-semibold text-white shadow-md transition duration-300 hover:bg-[#24574A] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={19} className="animate-spin" />
+                      Sending Message...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={18} />
+                      Send Message
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+
+                <p className="text-center text-xs leading-6 text-[#858B85]">
+                  Your information will only be used to respond to your
+                  inquiry.
+                </p>
+
+              </form>
             </div>
-
           </div>
 
         </div>
-
       </section>
 
-
       {/* ================= BOTTOM CTA ================= */}
-      <section className="bg-[#F2F0E9] border-t border-[#E8E3D8]">
 
-        <div className="max-w-7xl mx-auto px-6 md:px-10 py-16">
+      <section className="px-6 pb-20 md:px-10">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#173D35] px-7 py-12 text-center md:px-16 md:py-16">
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full border border-white/10" />
+          <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full border border-white/10" />
 
-            <div className="max-w-2xl text-center md:text-left">
-
-              <div className="flex items-center gap-3 justify-center md:justify-start mb-4">
-                <BookOpen size={19} className="text-[#A58A56]" />
-
-                <span className="text-[#A58A56] uppercase tracking-[3px] text-xs font-bold">
-                  Explore IMRJ
-                </span>
-              </div>
-
-              <h2 className="text-3xl md:text-4xl text-[#173D35] mb-3">
-                Have Research to Share?
-              </h2>
-
-              <p className="text-[#777D76] text-sm leading-7">
-                Explore our journal and take the next step in sharing
-                your research with the academic community.
-              </p>
-
+          <div className="relative">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#D8C49A]">
+              <BookOpen size={28} />
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4">
+            <h2 className="mt-6 font-serif text-3xl font-bold text-white md:text-4xl">
+              Have a Research Paper to Publish?
+            </h2>
 
-              <Link
-                to="/about"
-                className="px-7 py-3.5 border border-[#173D35] text-[#173D35] rounded-lg font-semibold text-sm hover:bg-[#173D35] hover:text-white transition duration-300"
-              >
-                About IMRJ
-              </Link>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-white/70 md:text-base">
+              Share your research with the academic community. Explore our
+              publication process and submit your manuscript to IMRJ.
+            </p>
 
-              <Link
-                to="/current-issue"
-                className="px-7 py-3.5 bg-[#173D35] text-white rounded-lg font-semibold text-sm hover:bg-[#245448] transition duration-300 flex items-center gap-2"
-              >
-                Explore Journal
-                <ArrowRight size={17} />
-              </Link>
-
-            </div>
-
+            <Link
+              to="/submit-manuscript"
+              className="mt-8 inline-flex items-center gap-3 rounded-xl bg-[#C7A96B] px-7 py-4 text-sm font-bold text-[#173D35] transition hover:bg-[#D8C49A]"
+            >
+              Submit Your Research
+              <ArrowUpRight size={18} />
+            </Link>
           </div>
 
         </div>
-
       </section>
 
     </div>
   );
-}
+};
 
 export default Contact;
