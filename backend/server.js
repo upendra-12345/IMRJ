@@ -17,23 +17,28 @@ const app = express();
 // =================================
 
 const allowedOrigins = [
-"http://localhost:5173",
-"https://YOUR-FRONTEND-DOMAIN.com"
+  "http://localhost:5173",
+  "https://imrj.vercel.app",
 ];
 
-app.use(
-cors({
-origin: (origin, callback) => {
-if (!origin || allowedOrigins.includes(origin)) {
-callback(null, true);
-} else {
-callback(new Error("Not allowed by CORS"));
-}
-},
-methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-allowedHeaders: ["Content-Type", "Authorization"]
-})
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+  allowedHeaders: ["Content-Type", "Authorization"],
+
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 // =================================
 // BODY PARSER
@@ -61,7 +66,29 @@ app.use("/api/contact", contactRoutes);
 // =================================
 
 app.get("/", (req, res) => {
-res.status(200).send("IMRJ Backend API is running successfully.");
+  res.status(200).send(
+    "IMRJ Backend API is running successfully."
+  );
+});
+
+// =================================
+// ERROR HANDLER
+// =================================
+
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err.message);
+
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      success: false,
+      message: "Origin not allowed by CORS",
+    });
+  }
+
+  res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+  });
 });
 
 // =================================
@@ -71,5 +98,5 @@ res.status(200).send("IMRJ Backend API is running successfully.");
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-console.log("IMRJ Backend running on port " + PORT);
+  console.log(`IMRJ Backend running on port ${PORT}`);
 });
