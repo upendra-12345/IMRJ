@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import connectDB from "./config/db.js";
+
 import submissionRoutes from "./routes/submissionRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
@@ -16,22 +17,22 @@ const app = express();
 // =================================
 
 const allowedOrigins = [
-  "http://localhost:5173",
-  // Add your deployed frontend URL here when available
+"http://localhost:5173",
+"https://YOUR-FRONTEND-DOMAIN.com"
 ];
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
+cors({
+origin: (origin, callback) => {
+if (!origin || allowedOrigins.includes(origin)) {
+callback(null, true);
+} else {
+callback(new Error("Not allowed by CORS"));
+}
+},
+methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+allowedHeaders: ["Content-Type", "Authorization"]
+})
 );
 
 // =================================
@@ -42,7 +43,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // =================================
-// DATABASE
+// DATABASE CONNECTION
 // =================================
 
 connectDB();
@@ -60,7 +61,7 @@ app.use("/api/contact", contactRoutes);
 // =================================
 
 app.get("/", (req, res) => {
-  res.send("IMRJ Backend API is running");
+res.status(200).send("IMRJ Backend API is running successfully.");
 });
 
 // =================================
@@ -70,5 +71,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+console.log("IMRJ Backend running on port " + PORT);
 });
