@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-
+import contactRoutes from "./routes/contactRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -24,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Home route
 app.get("/", (req, res) => {
