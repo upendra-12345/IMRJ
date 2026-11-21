@@ -19,6 +19,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://imrj.vercel.app",
+  "https://imrj.org",
+  "https://www.imrj.org",
 ];
 
 const corsOptions = {
