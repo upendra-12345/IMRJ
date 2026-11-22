@@ -595,31 +595,32 @@ function SubmitManuscript() {
                     </option>
 
                     <option value="Computer Science & Engineering">
-                      Computer Science & Engineering
+                      Healthcare & Hospital Management
                     </option>
 
                     <option value="Management & Commerce">
-                      Management & Commerce
+                      General Business & Strategy
                     </option>
 
                     <option value="Business Administration">
-                      Business Administration
+                      Finance & Accounting
                     </option>
 
                     <option value="Social Sciences">
-                      Social Sciences
+                      Marketing & Consumer Behavior
                     </option>
 
                     <option value="Education & Humanities">
-                      Education & Humanities
+                      Human Resources &  Leadership
+
                     </option>
 
                     <option value="Science & Technology">
-                      Science & Technology
+                      Technology, AI & Operations
                     </option>
 
                     <option value="Health Sciences">
-                      Health Sciences
+                      Sustainability & ESG
                     </option>
 
                     <option value="Other">

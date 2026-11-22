@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
+
 import {
   Users,
-  GraduationCap,
   ArrowRight,
-  
   BookOpen,
   Award,
   Globe,
@@ -11,45 +10,132 @@ import {
   Sparkles,
   Quote,
   Mail,
+  GraduationCap,
+  MapPin,
 } from "lucide-react";
 
 function EditorialBoard() {
   const editorialMembers = [
     {
+      id: 1,
+      name: "Dr. Rohan Mehta",
+      initials: "RM",
       role: "Editor-in-Chief",
+      designation: "Professor",
+      qualification: "Ph.D. in Information Technology",
+      institution: "National Institute of Digital Research",
+      country: "India",
+      flag: "🇮🇳",
       description:
         "Provides academic leadership and oversees the journal's editorial direction.",
-      number: "01",
+      expertise: [
+         "Computer Science",
+         "Artificial Intelligence",
+         "Data Science",
+         "Information Technology",
+
+      ],
+      
     },
     {
+      id: 2,
+      name: "Dr. Kavita Nair",
+      initials: "KN",
       role: "Associate Editor",
+      designation: "Associate Professor",
+      qualification: "Ph.D. in Business Administration",
+      institution: "Institute of Management and Innovation",
+      country: "India",
+      flag: "🇮🇳",
       description:
         "Supports editorial decisions and coordinates manuscript evaluations.",
-      number: "02",
+      expertise: [
+        "Strategic Management",
+        "Marketing Management",
+        "Business Analytics",
+        "Entrepreneurship",
+      ],
+      
     },
     {
+      id: 3,
+      name: "Prof. Oliver Bennett",
+      initials: "OB",
       role: "Managing Editor",
+      designation: "Senior Professor",
+      qualification: "Ph.D. in Engineering",
+      institution: "Northbridge University",
+      country: "United Kingdom",
+      flag: "🇬🇧",
       description:
         "Coordinates editorial operations and publication workflows.",
-      number: "03",
+      expertise: [
+        "Engineering and Technology",
+        "Industrial Engineering",
+       "Operations Research",
+       "Technology Management"
+      ],
+      
     },
     {
+      id: 4,
+      name: "Dr. Sofia Laurent",
+      initials: "SL",
       role: "Editorial Board Member",
+      designation: "Research Professor",
+      qualification: "Ph.D. in Environmental Science",
+      institution: "European Institute of Sustainability",
+      country: "France",
+      flag: "🇫🇷",
       description:
         "Contributes academic expertise and supports journal development.",
-      number: "04",
+      expertise: [
+        "Environmental Science",
+        "Climate Research",
+        "Sustainable Development",
+        "Environmental Management",
+      ],
+     
     },
     {
+      id: 5,
+      name: "Prof. Michael Chen",
+      initials: "MC",
       role: "Section Editor",
+      designation: "Professor",
+      qualification: "Ph.D. in Educational Technology",
+      institution: "Pacific Research University",
+      country: "Canada",
+      flag: "🇨🇦",
       description:
         "Supports research evaluation within specific academic disciplines.",
-      number: "05",
+      expertise: [
+        "Human Resource Management",
+        "Organizational Behavior",
+        "Healthcare Management",
+        "Health Economics"
+      ],
+      
     },
     {
+      id: 6,
+      name: "Dr. Elena Fischer",
+      initials: "EF",
       role: "Review Coordinator",
+      designation: "Associate Professor",
+      qualification: "Ph.D. in Social Sciences",
+      institution: "Central European Academic Institute",
+      country: "Germany",
+      flag: "🇩🇪",
       description:
-        "Coordinates communication and the manuscript review process.",
-      number: "06",
+        "Coordinates the manuscript review process and supports editorial communication.",
+      expertise: [
+        "Social Research",
+        "Public Policy",
+        "Human Development",
+        "Research Methodology"
+      ],
+      
     },
   ];
 
@@ -78,6 +164,7 @@ function EditorialBoard() {
     <div className="bg-[#FAF9F6] min-h-screen">
 
       {/* ================= HERO SECTION ================= */}
+
       <section className="relative min-h-[420px] flex items-center overflow-hidden">
 
         <div
@@ -146,6 +233,7 @@ function EditorialBoard() {
 
 
       {/* ================= INTRODUCTION ================= */}
+
       <section className="max-w-7xl mx-auto px-6 md:px-10 py-20">
 
         <div className="max-w-3xl mx-auto text-center animate-fade-up">
@@ -172,39 +260,146 @@ function EditorialBoard() {
 
 
         {/* ================= EDITORIAL CARDS ================= */}
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-7 mt-16">
 
           {editorialMembers.map((member, index) => (
 
             <div
-              key={index}
-              className="bg-white border border-[#E8E3D8] rounded-2xl p-7 md:p-8 text-center shadow-sm hover:shadow-xl hover:-translate-y-2 hover:border-[#B89B64]/50 transition duration-500 group relative overflow-hidden animate-fade-up"
-              style={{ animationDelay: `${index * 100}ms` }}
+              key={member.id}
+              className="bg-white border border-[#E8E3D8] rounded-2xl text-center shadow-sm hover:shadow-xl hover:-translate-y-2 hover:border-[#B89B64]/50 transition duration-500 group relative overflow-hidden animate-fade-up flex flex-col"
+              style={{
+                animationDelay: `${index * 100}ms`,
+              }}
             >
 
-              {/* Background number */}
+              {/* Background Number */}
+
               <span className="absolute top-3 right-5 text-6xl font-serif text-[#F2F0E9] group-hover:text-[#B89B64]/10 transition">
                 {member.number}
               </span>
 
-              {/* Profile icon */}
-              <div className="relative z-10 w-24 h-24 rounded-full bg-[#F2F0E9] border border-[#E8E3D8] text-[#173D35] flex items-center justify-center mx-auto group-hover:bg-[#173D35] group-hover:text-[#D1BC91] group-hover:border-[#173D35] transition duration-500">
-                <GraduationCap size={43} strokeWidth={1.4} />
+
+              {/* Editor Avatar */}
+
+              <div className="relative z-10 w-24 h-24 rounded-full bg-[#173D35] border-[3px] border-[#D6B77A] text-[#FAF9F6] flex items-center justify-center mx-auto mt-8 group-hover:bg-[#24574A] group-hover:text-[#D1BC91] transition duration-500 shadow-md">
+
+                <span className="font-serif text-2xl font-semibold tracking-wide">
+                  {member.initials}
+                </span>
+
               </div>
 
-              <div className="w-10 h-[2px] bg-[#B89B64] mx-auto mt-6 mb-5 group-hover:w-16 transition-all duration-300" />
 
-              <h3 className="text-xl font-semibold text-[#173D35] mb-3">
-                {member.role}
-              </h3>
+              {/* Editor Information */}
 
-              <p className="text-sm text-[#777D76] leading-7">
-                {member.description}
-              </p>
+              <div className="px-6 md:px-7 pt-6 pb-7 flex flex-col flex-1">
 
-              <div className="mt-6 pt-5 border-t border-[#E8E3D8] flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#A58A56]">
-                <Award size={15} />
-                Editorial Position
+                <div className="inline-flex items-center justify-center gap-2 text-[#A58A56] text-[10px] font-bold uppercase tracking-wider mb-3">
+
+                  <Award size={14} />
+
+                  {member.role}
+
+                </div>
+
+                <h3 className="text-xl font-semibold text-[#173D35] mb-2">
+                  {member.name}
+                </h3>
+
+                <p className="text-sm text-[#A58A56] font-semibold mb-3">
+                  {member.designation}
+                </p>
+
+                <p className="text-xs text-[#777D76] leading-6 mb-4">
+                  {member.description}
+                </p>
+
+
+                {/* Qualification */}
+
+                <div className="flex items-start gap-3 text-left text-xs text-[#69736C] leading-6 mt-2">
+
+                  <GraduationCap
+                    size={17}
+                    className="text-[#B89B64] shrink-0 mt-1"
+                  />
+
+                  <span>
+                    {member.qualification}
+                  </span>
+
+                </div>
+
+
+                {/* Institution */}
+
+                <div className="flex items-start gap-3 text-left text-xs text-[#69736C] leading-6 mt-3">
+
+                  <BookOpen
+                    size={16}
+                    className="text-[#B89B64] shrink-0 mt-1"
+                  />
+
+                  <span>
+                    {member.institution}
+                  </span>
+
+                </div>
+
+
+                {/* Country */}
+
+                <div className="flex items-center gap-3 text-left text-xs text-[#69736C] mt-3">
+
+                  <MapPin
+                    size={16}
+                    className="text-[#B89B64] shrink-0"
+                  />
+
+                  <span>
+                    {member.country}
+                  </span>
+
+                  <span className="text-xl ml-auto">
+                    {member.flag}
+                  </span>
+
+                </div>
+
+
+                {/* Research Expertise */}
+
+                <div className="mt-5 pt-5 border-t border-[#E8E3D8]">
+
+                  <div className="flex items-center justify-center gap-2 text-[#173D35] text-xs font-bold mb-4">
+
+                    <BookOpen
+                      size={15}
+                      className="text-[#B89B64]"
+                    />
+
+                    Research Expertise
+
+                  </div>
+
+                  <div className="flex flex-wrap justify-center gap-2">
+
+                    {member.expertise.map((area, expertiseIndex) => (
+
+                      <span
+                        key={expertiseIndex}
+                        className="bg-[#F3F5F1] text-[#496057] border border-[#E5EAE3] px-3 py-2 rounded-md text-[10px] leading-4"
+                      >
+                        {area}
+                      </span>
+
+                    ))}
+
+                  </div>
+
+                </div>
+
               </div>
 
             </div>
@@ -213,15 +408,26 @@ function EditorialBoard() {
 
         </div>
 
+
+        {/* ================= EDITORIAL NOTICE ================= */}
+
         <div className="mt-10 flex items-start gap-3 max-w-3xl mx-auto bg-[#F2F0E9] border border-[#E8E3D8] rounded-xl p-5">
 
-          <Sparkles size={20} className="text-[#A58A56] shrink-0 mt-0.5" />
+          <Sparkles
+            size={20}
+            className="text-[#A58A56] shrink-0 mt-0.5"
+          />
 
           <p className="text-sm text-[#777D76] leading-7">
-            <strong className="text-[#173D35]">Editorial information:</strong>{" "}
-            These are illustrative editorial positions. Replace them
-            with verified names, designations, qualifications, and
-            institutional affiliations before publishing this page.
+
+            <strong className="text-[#173D35]">
+              Editorial information:
+            </strong>{" "}
+
+            The names, qualifications, and affiliations displayed
+            are sample information. Replace them with verified
+            editorial board details before publishing.
+
           </p>
 
         </div>
@@ -230,6 +436,7 @@ function EditorialBoard() {
 
 
       {/* ================= RESPONSIBILITIES ================= */}
+
       <section className="bg-[#F2F0E9] py-20 border-y border-[#E8E3D8]">
 
         <div className="max-w-7xl mx-auto px-6 md:px-10">
@@ -285,6 +492,7 @@ function EditorialBoard() {
 
 
       {/* ================= QUOTE SECTION ================= */}
+
       <section className="relative py-24 overflow-hidden">
 
         <div
@@ -299,7 +507,10 @@ function EditorialBoard() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
 
-          <Quote size={42} className="text-[#B89B64] mx-auto mb-7" />
+          <Quote
+            size={42}
+            className="text-[#B89B64] mx-auto mb-7"
+          />
 
           <h2 className="text-2xl md:text-4xl text-white leading-relaxed font-normal">
             "Advancing knowledge through meaningful research,
@@ -318,6 +529,7 @@ function EditorialBoard() {
 
 
       {/* ================= CTA ================= */}
+
       <section className="bg-[#FAF9F6] py-20">
 
         <div className="max-w-7xl mx-auto px-6 md:px-10">
@@ -343,7 +555,10 @@ function EditorialBoard() {
                 </div>
 
                 <h2 className="text-3xl md:text-4xl text-white mb-4">
-                  Interested in <span className="italic text-[#D1BC91]">Contributing?</span>
+                  Interested in{" "}
+                  <span className="italic text-[#D1BC91]">
+                    Contributing?
+                  </span>
                 </h2>
 
                 <p className="text-gray-300 text-sm leading-7">
