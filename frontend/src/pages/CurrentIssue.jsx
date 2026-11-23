@@ -18,7 +18,6 @@ import {
   GraduationCap,
   ChevronDown,
   ChevronUp,
-  Clock,
   Globe,
   Sparkles,
   AlertCircle,
@@ -65,6 +64,27 @@ const formatDate = (date) => {
   });
 };
 
+// Get the next publication date (25th of every month)
+const getNextPublicationDate = () => {
+  const today = new Date();
+
+  let year = today.getFullYear();
+  let month = today.getMonth();
+
+  // If today is after the 25th, move to next month
+  if (today.getDate() > 25) {
+    month += 1;
+  }
+
+  // Handle December → January
+  if (month > 11) {
+    month = 0;
+    year += 1;
+  }
+
+  return new Date(year, month, 25);
+};
+
 // Get PDF URL
 const getPdfUrl = (paperId, download = false) => {
   const url = `${API_URL}/current-issue/${paperId}/pdf`;
@@ -78,6 +98,9 @@ export default function CurrentIssue() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedAbstracts, setExpandedAbstracts] = useState({});
+
+  // Get next publication date
+  const nextPublicationDate = getNextPublicationDate();
 
   // Fetch published papers
   const fetchCurrentIssue = async () => {
@@ -142,6 +165,7 @@ export default function CurrentIssue() {
 
     const title = paper.title || "";
     const abstract = paper.abstract || "";
+
     const authors = Array.isArray(paper.authors)
       ? paper.authors.join(", ")
       : paper.authors || "";
@@ -165,6 +189,7 @@ export default function CurrentIssue() {
       <section className="relative overflow-hidden bg-gradient-to-br from-[#173D35] via-[#24574A] to-[#315F50] px-6 py-24 text-white">
 
         <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+
         <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-[#B89B64]/20 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl">
@@ -176,6 +201,7 @@ export default function CurrentIssue() {
 
           <h1 className="max-w-4xl font-serif text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             Current Issue
+
             <span className="block text-[#D9C49B]">
               Research & Publications
             </span>
@@ -214,7 +240,9 @@ export default function CurrentIssue() {
 
         <div className="grid gap-6 md:grid-cols-3">
 
+          {/* PUBLICATION SCHEDULE */}
           <div className="rounded-2xl border border-[#E7E3D9] bg-white p-6 shadow-sm">
+
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#173D35]/10 text-[#173D35]">
               <Calendar size={23} />
             </div>
@@ -224,12 +252,31 @@ export default function CurrentIssue() {
             </h3>
 
             <p className="mt-2 text-sm leading-7 text-gray-600">
-              The journal follows a regular monthly publication
-              schedule, with issues generally published on the 25th.
+              IMRJ publishes a new issue on the 25th of every month.
             </p>
+
+            {/* NEXT PUBLICATION DATE */}
+            <div className="mt-4 rounded-xl bg-[#F2F0E9] p-4">
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#9A7B43]">
+                Next Publication Date
+              </p>
+
+              <p className="mt-2 font-serif text-2xl font-bold text-[#173D35]">
+                {formatDate(nextPublicationDate)}
+              </p>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Published monthly on the 25th
+              </p>
+
+            </div>
+
           </div>
 
+          {/* OPEN ACCESS */}
           <div className="rounded-2xl border border-[#E7E3D9] bg-white p-6 shadow-sm">
+
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#B89B64]/15 text-[#9A7B43]">
               <Globe size={23} />
             </div>
@@ -242,9 +289,12 @@ export default function CurrentIssue() {
               Published research is made accessible to readers
               and researchers to encourage knowledge sharing.
             </p>
+
           </div>
 
+          {/* PEER REVIEW */}
           <div className="rounded-2xl border border-[#E7E3D9] bg-white p-6 shadow-sm">
+
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#173D35]/10 text-[#173D35]">
               <BookMarked size={23} />
             </div>
@@ -257,6 +307,7 @@ export default function CurrentIssue() {
               The journal promotes academic quality through
               a scholarly peer-review process.
             </p>
+
           </div>
 
         </div>
@@ -268,6 +319,7 @@ export default function CurrentIssue() {
         <div className="grid items-center gap-10 md:grid-cols-2">
 
           <div>
+
             <p className="mb-3 text-sm font-bold uppercase tracking-[3px] text-[#B89B64]">
               About This Issue
             </p>
@@ -289,6 +341,7 @@ export default function CurrentIssue() {
               Explore the published articles below and access
               their abstracts and full-text PDF documents.
             </p>
+
           </div>
 
           <div className="rounded-2xl bg-[#173D35] p-8 text-white shadow-lg md:p-10">
@@ -322,11 +375,13 @@ export default function CurrentIssue() {
         <section className="mx-auto max-w-7xl px-6 py-12">
 
           <div className="mb-7 flex items-center gap-3">
+
             <div className="h-8 w-1 rounded-full bg-[#B89B64]" />
 
             <h2 className="font-serif text-3xl font-bold text-[#173D35]">
               Featured Research
             </h2>
+
           </div>
 
           <div className="rounded-2xl border border-[#E7E3D9] bg-white p-7 shadow-sm md:p-10">
@@ -358,6 +413,7 @@ export default function CurrentIssue() {
 
               <span className="flex items-center gap-2 text-sm text-gray-500">
                 <Calendar size={16} />
+
                 {formatDate(
                   featuredPaper.publishedAt ||
                     featuredPaper.publicationDate ||
@@ -386,6 +442,7 @@ export default function CurrentIssue() {
         <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
 
           <div>
+
             <p className="mb-2 text-sm font-bold uppercase tracking-[3px] text-[#B89B64]">
               Research Publications
             </p>
@@ -397,6 +454,7 @@ export default function CurrentIssue() {
             <p className="mt-3 text-gray-600">
               Browse the research articles available in this issue.
             </p>
+
           </div>
 
           <div className="flex items-center gap-2 rounded-lg border border-[#E7E3D9] bg-white px-4 py-3">
@@ -508,6 +566,7 @@ export default function CurrentIssue() {
 
                         <span className="flex items-center gap-1 text-xs text-gray-500">
                           <Calendar size={14} />
+
                           {formatDate(
                             paper.publishedAt ||
                               paper.publicationDate ||
@@ -525,6 +584,7 @@ export default function CurrentIssue() {
                         <span className="font-semibold text-gray-700">
                           Authors:
                         </span>{" "}
+
                         {Array.isArray(paper.authors)
                           ? paper.authors.join(", ")
                           : paper.authors || "Not specified"}

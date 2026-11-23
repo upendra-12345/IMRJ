@@ -444,7 +444,7 @@ function SubmitManuscript() {
                     htmlFor="email"
                     className="mb-2 block text-sm font-semibold text-[#173D35]"
                   >
-                    Email Address *
+                    Email Address 
                   </label>
 
                   <input
@@ -454,7 +454,7 @@ function SubmitManuscript() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email address"
-                    required
+                    
                     disabled={loading || isSubmitted}
                     className={inputStyle}
                   />
@@ -465,7 +465,7 @@ function SubmitManuscript() {
                     htmlFor="phone"
                     className="mb-2 block text-sm font-semibold text-[#173D35]"
                   >
-                    Phone Number *
+                    Phone Number 
                   </label>
 
                   <input
@@ -475,7 +475,7 @@ function SubmitManuscript() {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="Enter phone number"
-                    required
+                    
                     disabled={loading || isSubmitted}
                     className={inputStyle}
                   />
@@ -486,7 +486,7 @@ function SubmitManuscript() {
                     htmlFor="institution"
                     className="mb-2 block text-sm font-semibold text-[#173D35]"
                   >
-                    Institution / University *
+                    Institution / University 
                   </label>
 
                   <input
@@ -496,7 +496,7 @@ function SubmitManuscript() {
                     value={formData.institution}
                     onChange={handleChange}
                     placeholder="Enter institution name"
-                    required
+                    
                     disabled={loading || isSubmitted}
                     className={inputStyle}
                   />
@@ -507,7 +507,7 @@ function SubmitManuscript() {
                     htmlFor="department"
                     className="mb-2 block text-sm font-semibold text-[#173D35]"
                   >
-                    Department *
+                    Department 
                   </label>
 
                   <input
@@ -517,7 +517,7 @@ function SubmitManuscript() {
                     value={formData.department}
                     onChange={handleChange}
                     placeholder="Enter your department"
-                    required
+                    
                     disabled={loading || isSubmitted}
                     className={inputStyle}
                   />
