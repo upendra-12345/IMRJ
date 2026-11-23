@@ -24,10 +24,6 @@ const createSubmission = async (req, res) => {
     const requiredFields = {
       title,
       authorName,
-      email,
-      phone,
-      institution,
-      department,
       category,
       abstract,
       keywords,
@@ -48,7 +44,7 @@ const createSubmission = async (req, res) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email)) {
+    if (email && !emailRegex.test(email)) {
       if (req.file?.path) {
         await fs.unlink(req.file.path).catch(() => {});
       }
@@ -75,10 +71,10 @@ const createSubmission = async (req, res) => {
       submissionId,
       title: title.trim(),
       authorName: authorName.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.trim(),
-      institution: institution.trim(),
-      department: department.trim(),
+      email: email.trim().toLowerCase()||"",
+      phone: phone.trim() ||"",
+      institution: institution.trim() ||"",
+      department: department.trim() ||"",
       category: category.trim(),
       abstract: abstract.trim(),
       keywords: keywords.trim(),
