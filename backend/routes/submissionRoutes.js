@@ -16,7 +16,6 @@ import protectAdmin from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-
 // ==========================================
 // PUBLIC ROUTES
 // ==========================================
@@ -34,8 +33,7 @@ router.get(
   getCurrentIssuePapers
 );
 
-// All published papers for archives
-// No admin authentication required
+// All published papers
 router.get(
   "/archives",
   getArchivePapers
@@ -52,7 +50,6 @@ router.get(
   "/published/:id/pdf",
   downloadPublishedPaper
 );
-
 
 // ==========================================
 // ADMIN ROUTES
