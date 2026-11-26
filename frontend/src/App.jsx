@@ -14,7 +14,8 @@ import Archives from "./pages/Archives";
 import Contact from "./pages/Contact";
 import SubmitManuscript from "./pages/SubmitManuscript";
 import ArchiveYear from "./pages/ArchiveYear";
-
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 // NEW AUTHOR PAGES
 import AuthorGuidelines from "./pages/AuthorGuidelines";
 import PublicationEthics from "./pages/PublicationEthics";
@@ -60,6 +61,7 @@ function App() {
       <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
 
 
+
       {/* ================= AUTHOR ROUTES ================= */}
 
       <Route
@@ -88,8 +90,17 @@ function App() {
           </PublicLayout>
         }
       />
+      <Route
+        path="/privacy-policy"
+        element={
+        <PublicLayout>
+          <PrivacyPolicy />
+        </PublicLayout>
+        }
+      />
+      <Route path="/terms-and-conditions" element={<PublicLayout><TermsAndConditions /></PublicLayout>} />
 
-
+  
       {/* ================= ADMIN ROUTES ================= */}
 
       <Route

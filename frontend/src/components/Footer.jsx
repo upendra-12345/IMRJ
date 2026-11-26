@@ -25,8 +25,8 @@ function Footer() {
     ["Author Guidelines", "/author-guidelines"],
     ["Publication Ethics", "/publication-ethics"],
     ["Submit Manuscript", "/submit-manuscript"],
-    ["Review Process", "/review-process"],
-    ["Publication Fees", "/publication-fees"],
+    
+    
   ];
 
   const scrollToTop = () => {
