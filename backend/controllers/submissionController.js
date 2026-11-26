@@ -346,6 +346,7 @@ const downloadSubmission = async (req, res) => {
 const updateSubmissionStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    const { id } = req.params;
 
     const allowedStatuses = [
       "Pending",
@@ -355,6 +356,7 @@ const updateSubmissionStatus = async (req, res) => {
       "Rejected",
     ];
 
+    // Validate status
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -362,27 +364,38 @@ const updateSubmissionStatus = async (req, res) => {
       });
     }
 
-    const submission = await Submission.findById(req.params.id);
+    // Find submission
+    const existingSubmission = await Submission.findById(id);
 
-    if (!submission) {
+    if (!existingSubmission) {
       return res.status(404).json({
         success: false,
         message: "Submission not found.",
       });
     }
 
-    submission.status = status;
-
     // Automatically publish accepted papers
+    let publishedAt = null;
+
     if (status === "Accepted") {
-      if (!submission.publishedAt) {
-        submission.publishedAt = new Date();
-      }
-    } else {
-      submission.publishedAt = null;
+      publishedAt =
+        existingSubmission.publishedAt || new Date();
     }
 
-    await submission.save();
+    // Update only status and publishedAt
+    const updatedSubmission = await Submission.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status,
+          publishedAt,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     return res.status(200).json({
       success: true,
@@ -392,7 +405,7 @@ const updateSubmissionStatus = async (req, res) => {
           ? "Research paper accepted and published successfully!"
           : "Submission status updated successfully.",
 
-      submission,
+      submission: updatedSubmission,
     });
   } catch (error) {
     console.error("Update Status Error:", error);
@@ -400,6 +413,7 @@ const updateSubmissionStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to update submission status.",
+      error: error.message,
     });
   }
 };
