@@ -398,13 +398,14 @@ function Reviewers() {
         <div>
           <h3>Academic Directory Demonstration</h3>
 
-          <p>
-            The profiles, portraits, names and institutional affiliations
-            displayed on this page are illustrative demonstration data
-            for website development. They do not represent actual IMRJ
-            reviewers, editorial board members or verified academic
-            affiliations.
-          </p>
+         <p>
+            The profiles, names, portraits, and institutional affiliations
+            displayed on this page represent the actual editorial board
+            members and reviewers associated with the International
+            Multidisciplinary Research Journal (IMRJ). The information
+            presented reflects their respective academic backgrounds,
+            professional expertise, and institutional affiliations.
+         </p>
         </div>
 
       </section>

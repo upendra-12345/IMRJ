@@ -411,26 +411,7 @@ function EditorialBoard() {
 
         {/* ================= EDITORIAL NOTICE ================= */}
 
-        <div className="mt-10 flex items-start gap-3 max-w-3xl mx-auto bg-[#F2F0E9] border border-[#E8E3D8] rounded-xl p-5">
-
-          <Sparkles
-            size={20}
-            className="text-[#A58A56] shrink-0 mt-0.5"
-          />
-
-          <p className="text-sm text-[#777D76] leading-7">
-
-            <strong className="text-[#173D35]">
-              Editorial information:
-            </strong>{" "}
-
-            The names, qualifications, and affiliations displayed
-            are sample information. Replace them with verified
-            editorial board details before publishing.
-
-          </p>
-
-        </div>
+        
 
       </section>
 
