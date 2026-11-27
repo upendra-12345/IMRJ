@@ -617,15 +617,15 @@ export default function PrivacyPolicy() {
             </a>
 
             {/* Contact Number */}
-            <a
+            {/* <a
               href="tel:+91 8109115483"
               className="group flex items-start gap-4"
             >
              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#C6A45D] text-[#173D35] transition-transform group-hover:scale-110">
               <Phone size={21} />
-             </div>
+             </div> */}
 
-             <div>
+             {/* <div>
                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#D7BD7D]">
                  Contact Number
                </p>
@@ -633,8 +633,8 @@ export default function PrivacyPolicy() {
                <p className="text-base text-white transition-colors group-hover:text-[#D7BD7D]">
                  +91 8109115483
                 </p>
-             </div>
-           </a>
+             </div> */}
+           {/* </a> */}
 
             </div>
 

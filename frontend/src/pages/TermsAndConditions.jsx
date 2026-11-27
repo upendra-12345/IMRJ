@@ -390,7 +390,7 @@ export default function TermsAndConditions() {
                   </a>
 
                   {/* Contact Number */}
-                  <a
+                  {/* <a
                     href="tel:+918109115483"
                     className="group flex items-start gap-4"
                   >
@@ -407,7 +407,7 @@ export default function TermsAndConditions() {
                         +91 8109115483
                       </p>
                     </div>
-                  </a>
+                  </a> */}
 
                 </div>
 

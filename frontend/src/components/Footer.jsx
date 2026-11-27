@@ -200,7 +200,7 @@ function Footer() {
                 </a>
 
               </div>
-
+{/* 
               <div className="flex gap-4 items-start">
 
                 <Phone
@@ -212,10 +212,10 @@ function Footer() {
                   href="tel:+918292161003"
                   className="text-sm text-[#777D76] hover:text-[#173D35] transition"
                 >
-                  +91 8109115483
+                  
                 </a>
 
-              </div>
+              </div> */}
 
               <div className="flex gap-4 items-start">
 

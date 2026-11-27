@@ -41,13 +41,13 @@ const Contact = () => {
       link: "mailto:dasglobal08@gmail.com",
       description: "Send us your questions anytime.",
     },
-    {
-      icon: Phone,
-      title: "Call Us",
-      value: "+91 8109115483",
-      link: "tel:+918109115483",
-      description: "Connect with our support team.",
-    },
+    // {
+    //   icon: Phone,
+    //   title: "Call Us",
+    //   value: "+91 8109115483",
+    //   link: "tel:+918109115483",
+    //   description: "Connect with our support team.",
+    // },
     {
       icon: MapPin,
       title: "Our Location",
